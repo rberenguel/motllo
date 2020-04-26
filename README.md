@@ -50,11 +50,21 @@ Motllo can convert a folder structure/repository (it more or less handles
 - Optionally, replacement blocks for this filepath
 - Code blocks (with possibly text describing what they are there for). All code
   blocks within a section are merged into that file
+  
+And, probably more importantly, given a document as above, it can convert it into a
+folder/repository structure, with variable replacement (in filenames as well as
+in code).
 
 ## Example
 
 You can see an example of a basic Python CLI tool (like this one) as a template,
 with replacements and comments [here](examples/python_cli.md).
+
+You can convert that Markdown file into a folder structure with
+
+```
+motllo build PATH_TO/python_cli.md -o SOME_COOL_PATH -r "project_name:awesome-new-project"
+```
 
 I plan on adding more examples at some point. New examples welcome!
 
