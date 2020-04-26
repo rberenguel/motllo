@@ -4,7 +4,15 @@
 
 Repository templates just like I like them
 
+- [Motivation](#motivation)
+- [Description](#description)
+- [Example](#example)
+- [Usage](#usage)
+- [Is it safe to use?](#is-it-safe-to-use)
+- [Next steps](#next-steps)
+
 ## Motivation
+
 
 It can be due to a bit of OCD and a bit of Knuth. 
 
