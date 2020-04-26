@@ -1,0 +1,48 @@
+isort:
+  - run: "isort {package}/*.py"
+  - message: "Running isort"
+
+mypy:
+  - run: "mypy {package}"
+  - message: "Running mypy"
+
+black:
+  - run:
+      - "black {package}"
+      - "black tests"
+  - message: "Running black on source and tests"
+
+pytest:
+  - run: "pytest -x"
+  - message: "Running pytest"
+
+pylint:
+  - run: "pylint {package} --exit-zero"
+  - message: "Running pylint"
+
+precommit:
+  - depends:
+      - precommit_ package:motllo
+
+precommit_:
+  - depends:
+      - isort
+      - mypy
+      - black
+      - pylint
+      - pytest
+
+monkeytype-run:
+  - run: "monkeytype run motllo/main.py"
+  - message: "Runs monkeytype"
+
+monkeytype-stubs:
+  - run:
+      - "monkeytype stub motllo.parser"
+      - "monkeytype stub motllo.settings"
+  - message: "Generates stubs for the base modules"
+
+monkeytype:
+  - depends:
+      - monkeytype-run
+      - monkeytype-stubs
