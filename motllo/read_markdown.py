@@ -156,7 +156,11 @@ def process_markdown(path: Path, replacements):
 
 
 def materialise_structure(
-    structure: Folder, path: Path, dry_run=True, replacements=None
+    structure: Folder,
+    path: Path,
+    dry_run=True,
+    replacements=None,
+    ignore_existing_folders=False,
 ):
     """Materialise or dry run the folder structure"""
     logger.debug("Replacements: %s", replacements)
@@ -166,11 +170,16 @@ def materialise_structure(
         try:
             location.mkdir()
         except FileExistsError:
-            logger.error(
-                "The destination folder %s already exists. Either delete or use a new path",
-                location,
-            )
-            sys.exit(-1)
+            if ignore_existing_folders:
+                logger.warning(
+                    "Folder %s already exists and will not be recreated", location
+                )
+            else:
+                logger.error(
+                    "The destination folder %s already exists. Either delete it, use a new path or pass the --ignore-existing-folders flag",
+                    location,
+                )
+                sys.exit(-1)
 
     for item in structure.iterdir():
         if item.is_dir():
@@ -191,9 +200,11 @@ def materialise_structure(
                 logger.info("Replacements applied to %s", item.name)
             if not dry_run:
                 if location.exists():
-                    raise Exception(
-                        "File already exists at that location. Delete it first"
+                    logger.error(
+                        "File %s already exists at that location. Delete it first",
+                        location,
                     )
+                    sys.exit(-1)
                 with location.open("w") as destination:
                     for line in item.contents:
                         destination.write(line)

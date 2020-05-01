@@ -103,6 +103,12 @@ def markdown(path, gitignore, ignore, output, max_length):
     help="Dry run by default so you can see what it does",
 )
 @click.option(
+    "--ignore-existing-folders",
+    is_flag=True,
+    default=False,
+    help="Ignore if the destination folder already exists",
+)
+@click.option(
     "-r",
     "--replace",
     help='Multiple replacement rules separated by colons, like -r "$PROJ:world_domination", -r"$TOOLS:python"',
@@ -112,7 +118,7 @@ def markdown(path, gitignore, ignore, output, max_length):
     "-o", "--output", help="Destination path to create everything", required=True
 )
 @cli.command()
-def build(path, dry_run, output, replace):
+def build(path, dry_run, output, replace, ignore_existing_folders):
     """Build a file/folder structure based on a Markdown document at PATH"""
     ppath = Path(path)
     opath = Path(output)
@@ -131,7 +137,11 @@ def build(path, dry_run, output, replace):
         logger.exception("Uncaught exception processing Markdown at path: %s", exc)
     try:
         materialise_structure(
-            structure, opath, dry_run=dry_run, replacements=replacements
+            structure,
+            opath,
+            dry_run=dry_run,
+            replacements=replacements,
+            ignore_existing_folders=ignore_existing_folders,
         )
     except Exception as exc:
         logger.exception("Uncaught exception materialising Markdown at path: %s", exc)

@@ -99,23 +99,19 @@ Commands:
 ```
 ---
 ```
-Usage: motllo markdown [OPTIONS] PATH
+Usage: motllo build [OPTIONS] PATH
 
-  Generate a Markdown template from a folder or repository at PATH
+  Build a file/folder structure based on a Markdown document at PATH
 
 Options:
-  -x, --max-length INTEGER      Maximum amount of lines to write in the
-                                markdown, for each file. Use -1 for `all of
-                                them`
+  -o, --output TEXT          Destination path to create everything  [required]
+  -r, --replace TEXT         Multiple replacement rules separated by colons,
+                             like -r "$PROJ:world_domination",
+                             -r"$TOOLS:python"
 
-  -o, --output TEXT             Destination markdown file  [required]
-  --ignore TEXT                 Glob patterns to ignore, comma separated
-                                between quotes like "*.py,*.c,*.scala"
-
-  --gitignore / --no-gitignore  Use local and global gitignores, yes by
-                                default
-
-  --help                        Show this message and exit.
+  --ignore-existing-folders  Ignore if the destination folder already exists
+  --dry-run / --commit       Dry run by default so you can see what it does
+  --help                     Show this message and exit.
 ```
 ---
 ```
