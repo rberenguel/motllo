@@ -4,8 +4,13 @@ from pathlib import Path
 import click
 from colorlog import ColoredFormatter  # type: ignore
 
-from motllo.build import (build_markdown, build_tree, full_gitignore,
-                          text_tree, write_markdown)
+from motllo.build import (
+    build_markdown,
+    build_tree,
+    full_gitignore,
+    text_tree,
+    write_markdown,
+)
 from motllo.read_markdown import materialise_structure, process_markdown
 
 logger = logging.getLogger("motllo")
@@ -58,6 +63,10 @@ def cli(debug):
     "--ignore",
     help='Glob patterns to ignore, comma separated between quotes like "*.py,*.c,*.scala"',
 )
+@click.option(
+    "--force-include",
+    help='Glob patterns to forcefully include, comma separated between quotes like "*.py,*.c,*.scala"',
+)
 @click.option("-o", "--output", help="Destination markdown file", required=True)
 @click.option(
     "-x",
@@ -67,14 +76,19 @@ def cli(debug):
     default=15,
 )
 @cli.command()
-def markdown(path, gitignore, ignore, output, max_length):
-    """Generate a Markdown template from a folder or repository at PATH"""
+def markdown(path, gitignore, ignore, output, max_length, force_include):
+    """Generate a Markdown template from a folder or repository at PATH. Will
+ignore hidden files, you can use --force-include to add them"""
     ppath = Path(path)
     opath = Path(output)
     if ignore is not None:
         ignore_globs = ignore.split(",")
     else:
         ignore_globs = []
+    if force_include is not None:
+        include_globs = force_include.split(",")
+    else:
+        include_globs = None
     if gitignore:
         gitignore_globs = full_gitignore(ppath) + ["output"]
     else:
@@ -83,7 +97,11 @@ def markdown(path, gitignore, ignore, output, max_length):
     if len(all_ignore_globs) == 0:
         all_ignore_globs = None
     try:
-        structure = build_tree(Path.cwd() / ppath, ignore_globs=all_ignore_globs)
+        structure = build_tree(
+            Path.cwd() / ppath,
+            ignore_globs=all_ignore_globs,
+            include_globs=include_globs,
+        )
     except Exception as exc:
         logger.error("Uncaught exception building the tree: %s", exc)
     try:
@@ -143,6 +161,10 @@ def build(path, dry_run, output, replace, ignore_existing_folders):
             replacements=replacements,
             ignore_existing_folders=ignore_existing_folders,
         )
+        if dry_run:
+            logger.warn(
+                "If the above looks good, add the flag --commit to create the files and folders"
+            )
     except Exception as exc:
         logger.exception("Uncaught exception materialising Markdown at path: %s", exc)
 
@@ -153,16 +175,39 @@ def build(path, dry_run, output, replace, ignore_existing_folders):
     default=True,
     help="Use local and global gitignores, yes by default",
 )
+@click.option(
+    "--ignore",
+    help='Glob patterns to ignore, comma separated between quotes like "*.py,*.c,*.scala"',
+)
+@click.option(
+    "--force-include",
+    help='Glob patterns to forcefully include, comma separated between quotes like "*.py,*.c,*.scala"',
+)
 @cli.command()
-def tree(path, gitignore):
+def tree(path, gitignore, ignore, force_include):
     """Generate only the visual folder tree (like the UNIX tree command)"""
     ppath = Path(path)
-    if gitignore:
-        ignore_globs = full_gitignore(ppath)
+    if ignore is not None:
+        ignore_globs = ignore.split(",")
     else:
-        ignore_globs = None
+        ignore_globs = []
+    if force_include is not None:
+        include_globs = force_include.split(",")
+    else:
+        include_globs = None
+    if gitignore:
+        gitignore_globs = full_gitignore(ppath) + ["output"]
+    else:
+        gitignore_globs = []
+    all_ignore_globs = gitignore_globs + ignore_globs
+    if len(all_ignore_globs) == 0:
+        all_ignore_globs = None
     try:
-        only_tree = text_tree(Path.cwd() / ppath, ignore_globs=ignore_globs)
+        only_tree = text_tree(
+            Path.cwd() / ppath,
+            ignore_globs=all_ignore_globs,
+            include_globs=include_globs,
+        )
     except Exception as exc:
         logger.exception("Uncaught exception generating the tree: %s", exc)
     click.echo(only_tree)

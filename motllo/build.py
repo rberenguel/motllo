@@ -101,16 +101,20 @@ def build_file_markdown(current: Folder, base="", max_length=15):
     return markdown
 
 
-def build_tree(path: Path, ignore_globs: Optional[List[str]]):
+def build_tree(
+    path: Path, ignore_globs: Optional[List[str]], include_globs: Optional[List[str]]
+):
     """Build the tree from a path, given a glob"""
-    structure = Traverser(ignore_globs=ignore_globs)(path)
+    structure = Traverser(ignore_globs=ignore_globs, include_globs=include_globs)(path)
     structure = structure.prune()
     return structure
 
 
-def text_tree(path: Path, ignore_globs: Optional[List[str]]):
+def text_tree(
+    path: Path, ignore_globs: Optional[List[str]], include_globs: Optional[List[str]]
+):
     """Generate the textual tree representation only"""
-    structure = build_tree(path, ignore_globs)
+    structure = build_tree(path, ignore_globs, include_globs)
     return "\n".join(list(tree(structure)))
 
 

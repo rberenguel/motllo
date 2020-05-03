@@ -63,8 +63,10 @@ with replacements and comments [here](examples/python_cli.md).
 You can convert that Markdown file into a folder structure with
 
 ```
-motllo build PATH_TO/python_cli.md -o SOME_COOL_PATH -r "project_name:awesome-new-project"
+motllo build PATH_TO/python_cli.md -o SOME_COOL_PATH -r "project_name:awesome-new-project --commit"
 ```
+
+Without `--commit` you will only get an informational log about what operations will be performed
 
 I plan on adding more examples at some point. New examples welcome!
 
@@ -115,17 +117,28 @@ Options:
 ```
 ---
 ```
-Usage: motllo build [OPTIONS] PATH
+Usage: motllo markdown [OPTIONS] PATH
 
-  Build a file/folder structure based on a Markdown document at PATH
+  Generate a Markdown template from a folder or repository at PATH. Will
+  ignore hidden files, you can use --force-include to add them
 
 Options:
-  -o, --output TEXT     Destination path to create everything  [required]
-  -r, --replace TEXT    Multiple replacement rules separated by colons, like
-                        -r "$PROJ:world_domination", -r"$TOOLS:python"
+  -x, --max-length INTEGER      Maximum amount of lines to write in the
+                                markdown, for each file. Use -1 for `all of
+                                them`. Defaults to 15
 
-  --dry-run / --commit  Dry run by default so you can see what it does
-  --help                Show this message and exit.
+  -o, --output TEXT             Destination markdown file  [required]
+  --force-include TEXT          Glob patterns to forcefully include, comma
+                                separated between quotes like
+                                "*.py,*.c,*.scala"
+
+  --ignore TEXT                 Glob patterns to ignore, comma separated
+                                between quotes like "*.py,*.c,*.scala"
+
+  --gitignore / --no-gitignore  Use local and global gitignores, yes by
+                                default
+
+  --help                        Show this message and exit.
 ```
 ---
 ```
@@ -134,6 +147,13 @@ Usage: motllo tree [OPTIONS] PATH
   Generate only the visual folder tree (like the UNIX tree command)
 
 Options:
+  --force-include TEXT          Glob patterns to forcefully include, comma
+                                separated between quotes like
+                                "*.py,*.c,*.scala"
+
+  --ignore TEXT                 Glob patterns to ignore, comma separated
+                                between quotes like "*.py,*.c,*.scala"
+
   --gitignore / --no-gitignore  Use local and global gitignores, yes by
                                 default
 

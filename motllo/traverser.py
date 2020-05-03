@@ -20,8 +20,9 @@ def matches_glob(path: Path, globs: List[str]):
 class Traverser:
     """Traverser of (real or simulated) folder hierarchy. Callable class, configuration is passed to the constructor"""
 
-    def __init__(self, ignore_globs=None):
+    def __init__(self, ignore_globs=None, include_globs=None):
         self.ignore_globs = ignore_globs
+        self.include_globs = include_globs
         self.initial_path: Optional[Path] = None
 
     def __call__(self, initial_path) -> Folder:
@@ -54,8 +55,11 @@ class Traverser:
         first_level = list(base_path.iterdir())
         logger.debug("Here is the first level: %s", first_level)
         for path in first_level:
-            if matches_glob(path, self.ignore_globs):
-                continue
+            if not matches_glob(path, self.include_globs):
+                if matches_glob(path, self.ignore_globs):
+                    continue
+                if path.name.startswith("."):
+                    continue
             if path.is_dir():
                 tree += [self._handle_dir(path, depth + 1)]
             else:

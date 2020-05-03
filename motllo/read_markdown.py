@@ -2,8 +2,13 @@ import logging
 import sys
 from pathlib import Path
 
-from motllo.markdown_parser import (MARKDOWN_PARSER, BareCodeBlock, CodeBlock,
-                                    HeadingBlock, ListBlock)
+from motllo.markdown_parser import (
+    MARKDOWN_PARSER,
+    BareCodeBlock,
+    CodeBlock,
+    HeadingBlock,
+    ListBlock,
+)
 from motllo.ops import Folder
 from motllo.tree_parser import TreeParser
 
@@ -32,6 +37,7 @@ def structure_filler(folder, file_contents, file_replacements):
 
 
 def replace_replacements(file_replacement, replacements, to_be_replaced):
+    """Apply replacements to file identifier"""
     replaced = to_be_replaced
     common_keys = [key for key in file_replacement.keys() if key in replacements.keys()]
     for key in common_keys:
@@ -41,30 +47,53 @@ def replace_replacements(file_replacement, replacements, to_be_replaced):
     return replaced
 
 
-def parse_markdown_to_structure(markdown, replacements):
-    """Convert a parsed Markdown document into a folder structure"""
+def replace_file_contents(replacements, file_contents, file_replacements):
+    """Modify tree structure according to the replacements provided"""
+    replaced_file_contents = {}
+    for marker in file_contents:
+        logger.debug("File marker %s", marker)
+        contents = file_contents[marker]
+        if (
+            replacements is not None
+            and file_replacements.get(TREE_KEY, None) is not None
+        ):
+            new_file_marker = replace_replacements(
+                file_replacements[TREE_KEY], replacements, marker
+            )
+            if new_file_marker != marker:
+                logger.info(
+                    "Replaced file reference `%s` with `%s`", marker, new_file_marker
+                )
+            replaced_file_contents[new_file_marker] = contents
+        else:
+            replaced_file_contents[marker] = contents
+    return replaced_file_contents
+
+
+def _is_heading_block(item, with_title=None):
+    if with_title is not None:
+        return (
+            isinstance(item, HeadingBlock) and item.text.strip().lower() == with_title
+        )
+    return isinstance(item, HeadingBlock)
+
+
+def process_markdown_definitions(markdown, replacements):
+    """Process markdown, finding replacements needed"""
     file_marker = None
     replacement_marker = None
     file_contents = {}
     file_replacements = {}
     required_keys = {}
     for item in markdown:
-        if (
-            isinstance(item, HeadingBlock)
-            and item.text.strip().lower() == "tree structure"
-        ):
-            file_marker = TREE_KEY
-        elif (
-            isinstance(item, HeadingBlock)
-            and item.text.strip().lower() != "replacements"
-        ):
-            filename = item.text.strip()
-            file_marker = filename.replace("`", "")
-        elif (
-            isinstance(item, HeadingBlock)
-            and item.text.strip().lower() == "replacements"
-        ):
-            replacement_marker = file_marker
+        if _is_heading_block(item):
+            if _is_heading_block(item, with_title="tree structure"):
+                file_marker = TREE_KEY
+            elif _is_heading_block(item, with_title="replacements"):
+                replacement_marker = file_marker
+            else:
+                filename = item.text.strip()
+                file_marker = filename.replace("`", "")
         elif isinstance(item, ListBlock) and replacement_marker is not None:
             if ":" not in item.text:
                 continue
@@ -89,31 +118,24 @@ def parse_markdown_to_structure(markdown, replacements):
                 file_contents[file_marker] = contents
             else:
                 file_contents[file_marker] += "\n\n" + contents
-    for key in required_keys.keys():
+    for key in required_keys:
         if key not in replacements.keys():
             logger.warning(
                 "You have provided no replacement for `%s` in the CLI (use the -r flag)",
                 key,
             )
+    return file_contents, file_replacements
 
-    replaced_file_contents = {}
-    for marker in file_contents.keys():
-        logger.debug("File marker %s", marker)
-        contents = file_contents[marker]
-        if (
-            replacements is not None
-            and file_replacements.get(TREE_KEY, None) is not None
-        ):
-            new_file_marker = replace_replacements(
-                file_replacements[TREE_KEY], replacements, marker
-            )
-            if new_file_marker != marker:
-                logger.info(
-                    "Replaced file reference `%s` with `%s`", marker, new_file_marker
-                )
-            replaced_file_contents[new_file_marker] = contents
-        else:
-            replaced_file_contents[marker] = contents
+
+def parse_markdown_to_structure(markdown, replacements):
+    """Convert a parsed Markdown document into a folder structure"""
+    file_contents, file_replacements = process_markdown_definitions(
+        markdown, replacements
+    )
+
+    replaced_file_contents = replace_file_contents(
+        replacements, file_contents, file_replacements
+    )
 
     if TREE_KEY not in replaced_file_contents.keys():
         logger.error(

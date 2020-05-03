@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "motllo"
-version = "0.1.2"
+version = "0.2.0"
 description = "Project patterns like I like them"
 authors = ["Ruben Berenguel <ruben+poetry@mostlymaths.net>"]
 license = "MIT"
