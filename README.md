@@ -4,7 +4,7 @@
 
 Repository templates just like I like them
 
-- [Quick visual example](#quickvisualexample)
+- [Quick visual example](#quick-visual-example)
 - [Motivation](#motivation)
 - [Description](#description)
 - [Example](#example)
