@@ -25,7 +25,7 @@ def structure_filler(folder, file_contents, file_replacements):
             if cleaned not in file_contents.keys():
                 raise Exception(f"Damn file not there {cleaned}")
             item.set_contents(file_contents[cleaned])
-            if cleaned not in file_replacements.keys():
+            if cleaned not in file_replacements:
                 logger.debug("No replacements found for marker %s", cleaned)
             else:
                 item.set_replacements(file_replacements[cleaned])
@@ -34,7 +34,7 @@ def structure_filler(folder, file_contents, file_replacements):
 def replace_replacements(file_replacement, replacements, to_be_replaced):
     """Apply replacements to file identifier"""
     replaced = to_be_replaced
-    common_keys = [key for key in file_replacement.keys() if key in replacements.keys()]
+    common_keys = [key for key in file_replacement if key in replacements]
     for key in common_keys:
         old_value = file_replacement[key]
         new_value = replacements[key]
@@ -103,18 +103,18 @@ def process_markdown_definitions(markdown, replacements):
             required_keys[key] = True
             replacer = {key: in_code.strip()}
             logger.debug("Replacer: %s", replacer)
-            if replacement_marker not in file_replacements.keys():
+            if replacement_marker not in file_replacements:
                 file_replacements[replacement_marker] = replacer
             else:
                 file_replacements[replacement_marker].update(replacer)
         elif isinstance(item, (CodeBlock, BareCodeBlock)):
             contents = item.text.strip()
-            if file_marker not in file_contents.keys():
+            if file_marker not in file_contents:
                 file_contents[file_marker] = contents
             else:
                 file_contents[file_marker] += "\n\n" + contents
     for key in required_keys:
-        if key not in replacements.keys():
+        if key not in replacements:
             logger.warning(
                 "You have provided no replacement for `%s` in the CLI (use the -r flag)",
                 key,
@@ -132,7 +132,7 @@ def parse_markdown_to_structure(markdown, replacements):
         replacements, file_contents, file_replacements
     )
 
-    if TREE_KEY not in replaced_file_contents.keys():
+    if TREE_KEY not in replaced_file_contents:
         logger.error(
             "Tree structure section not found in the Markdown document. This is required"
         )
@@ -141,13 +141,20 @@ def parse_markdown_to_structure(markdown, replacements):
         l for l in replaced_file_contents[TREE_KEY].split("\n") if l != ""
     ]  # This is pretty crappy
     replaced_tree = []
+    replaced_file_replacements = {}
     if replacements is not None and file_replacements.get(TREE_KEY, None) is not None:
+        tree_replacements = file_replacements[TREE_KEY]
         for line in tree_lines:
             replaced_tree += [
-                replace_replacements(file_replacements[TREE_KEY], replacements, line)
+                replace_replacements(tree_replacements, replacements, line)
             ]
+        for key in file_replacements:
+            replaced_file_replacements[
+                replace_replacements(tree_replacements, replacements, key)
+            ] = file_replacements[key]
     else:
         replaced_tree = tree_lines
+        replaced_file_replacements = file_replacements
     try:
         structure = TreeParser(replaced_tree)()
     except IndexError as idx:
@@ -159,8 +166,8 @@ def parse_markdown_to_structure(markdown, replacements):
         )
         logger.warning(idx, exc_info=True)
         sys.exit(-1)
-    logger.debug(file_replacements)
-    structure_filler(structure, replaced_file_contents, file_replacements)
+    logger.debug(replaced_file_replacements)
+    structure_filler(structure, replaced_file_contents, replaced_file_replacements)
     return structure
 
 
