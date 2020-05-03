@@ -173,10 +173,8 @@ and improve it.
 ## Next steps
 
 I want to refactor big chunks of the internals (I don't like parts of the API),
-and add some more testing. I was a bit liberal with the final stages: I tested
-the tree-to-folder pretty extensively, but I didn't really test
-`tree-to-markdown` or` markdown-to-tree` as thoroughly as I would like. The
-latter should be pretty easy.
+and add some more testing, particularly around the replacements. This will be
+tricky, since generating random replacements is hard.
 
 I will probably spin out the markdown parser (which was stolen from the one I
 wrote for [bear-note-graph](https://github.com/rberenguel/bear-note-graph)) into
