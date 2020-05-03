@@ -4,14 +4,9 @@ from pathlib import Path
 import click
 from colorlog import ColoredFormatter  # type: ignore
 
-from motllo.build import (
-    build_markdown,
-    build_tree,
-    full_gitignore,
-    text_tree,
-    write_markdown,
-)
-from motllo.read_markdown import materialise_structure, process_markdown
+from motllo.build import materialise_structure, process_markdown
+from motllo.markdown import (build_markdown, build_tree, full_gitignore,
+                             text_tree, write_markdown)
 
 logger = logging.getLogger("motllo")
 
@@ -162,7 +157,7 @@ def build(path, dry_run, output, replace, ignore_existing_folders):
             ignore_existing_folders=ignore_existing_folders,
         )
         if dry_run:
-            logger.warn(
+            logger.warning(
                 "If the above looks good, add the flag --commit to create the files and folders"
             )
     except Exception as exc:

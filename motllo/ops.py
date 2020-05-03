@@ -13,7 +13,7 @@ class Contents:
 
     def read(self):
         """Just returns the contents"""
-        return self.contents
+        return "\n".join(self.contents)
 
     def __enter__(self):
         return self
@@ -25,11 +25,14 @@ class Contents:
 class File(Node):
     """Simulated File node, mimicking the API from Path needed to test and process a tree"""
 
+    EMPTY_CONTENTS = "This file is empty, mode was {mode}"
+
     def __init__(
         self, path, basename="", replacements: Optional[List[Dict[str, str]]] = None
     ):
-        self._path = path
-        self.name = path
+        self._path = ""
+        self.name = ""
+        self._rename(path)
         self.contents: Optional[List[str]] = None
         self.replacements = replacements
         splitted = self.name.split(".")
@@ -38,6 +41,10 @@ class File(Node):
         else:
             self.suffix = splitted[-1]
         self.basename = basename
+
+    def _rename(self, path):
+        self._path = path
+        self.name = path
 
     def as_posix(self):
         """Not really posix, but useful to generate links in the markdown result"""
@@ -48,11 +55,11 @@ class File(Node):
     def open(self, mode="meh"):
         """Simulates a content open"""
         if self.contents is None:
-            return Contents(contents=mode)
+            return Contents(contents=[self.EMPTY_CONTENTS.format(mode=mode)])
         return Contents(contents=self.contents)
 
     def set_contents(self, contents):
-        """Addts content as lines"""
+        """Adds content as lines"""
         self.contents = contents.strip().split("\n")
         return self
 
@@ -67,7 +74,7 @@ class File(Node):
         return False
 
     def __repr__(self):
-        return self.name
+        return f"{self.name}({self.contents})"
 
     def __eq__(self, other):
         return str(self) == str(other)
@@ -77,24 +84,31 @@ class Folder(Node):
     """Simulated File node, mimicking the API from Path needed to test and process a tree"""
 
     def __init__(self, path, contents: List[Any] = None, depth=0, basename=""):
-        self._path = path
+        self._depth = depth
+        self._path = ""
+        self._basename = basename
+        self.basename = ""
+        self.name = ""
+        self._rename(path)
         if contents is None:
             self._contents = []
         else:
             self._contents = contents
-        self._depth = depth
+        self.suffix = ""
+
+    def _rename(self, path):
+        self._path = path
         self.name = path
-        if basename == "":
+        if self._basename == "":
             self.basename = path
         else:
-            self.basename = basename + "/" + path
-        self.suffix = ""
+            self.basename = self._basename + "/" + path
 
     def __repr__(self):
         return self.name + f"[{self.iterdir()}]"
 
     def as_posix(self):
-        "Returns a kind of _as_posix, used to generate basenames and linkx"
+        "Returns a kind of _as_posix, used to generate basenames and links"
         return self.basename
 
     def append_to_contents(self, node: Node):

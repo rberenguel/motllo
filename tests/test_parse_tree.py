@@ -26,11 +26,14 @@ def test_tree_descent():
     assert parsed == mbp
 
 
-@pytest.mark.parametrize("execution_number", range(5))
-@pytest.mark.parametrize("depth", range(5))
-@pytest.mark.parametrize("width", range(5))
+RANGE = 5
+
+
+@pytest.mark.parametrize("execution_number", range(RANGE))
+@pytest.mark.parametrize("depth", range(RANGE))
+@pytest.mark.parametrize("width", range(RANGE))
 def test_randomised_tree_descent(execution_number, depth, width):
-    sl = [l for l in ascii_uppercase * 50]
+    sl = [l for l in ascii_uppercase * RANGE * RANGE * RANGE * RANGE]
     random.shuffle(sl)
 
     def random_tree(depth, width):
@@ -42,7 +45,8 @@ def test_randomised_tree_descent(execution_number, depth, width):
             results[index] = Folder(sl.pop(), contents=random_tree(depth - 1, width))
         return results
 
-    randomised = Folder("", contents=random_tree(3, 3))
+    randomised = Folder("", contents=random_tree(1 + depth, 1 + width))
+    print(randomised)
     all_lines = [line for line in tree(randomised)]
     parsed = TreeParser(all_lines)()
     print(randomised)
