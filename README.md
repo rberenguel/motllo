@@ -67,7 +67,7 @@ with replacements and comments [here](examples/python_cli.md).
 You can convert that Markdown file into a folder structure with
 
 ```
-motllo build PATH_TO/python_cli.md -o SOME_COOL_PATH -r "project_name:awesome-new-project --commit"
+motllo build PATH_TO/python_cli.md -o SOME_COOL_PATH -r "project_name:awesome-new-project" --commit
 ```
 
 Without `--commit` you will only get an informational log about what operations will be performed
